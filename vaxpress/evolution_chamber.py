@@ -49,6 +49,7 @@ ExecutionOptions = namedtuple('ExecutionOptions', [
     'boost_loop_mutations', 'full_scan_interval', 'species', 'codon_table',
     'protein', 'quiet', 'seq_description', 'print_top_mutants', 'addons',
     'lineardesign_dir', 'lineardesign_lambda', 'lineardesign_omit_start',
+    'lineardesign_penalty',
     'folding_engine',
 ])
 
@@ -108,6 +109,7 @@ class CDSEvolutionChamber:
                 self.execopts.lineardesign_lambda,
                 self.execopts.lineardesign_dir,
                 self.execopts.lineardesign_omit_start,
+                self.execopts.lineardesign_penalty,
                 self.quiet)
         elif self.execopts.random_initialization or self.execopts.protein:
             self.mutantgen.randomize_initial_codons()

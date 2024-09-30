@@ -57,12 +57,15 @@ class FoldEvaluator:
         else:
             raise ValueError(f'Unsupported RNA folding engine: {self.engine}')
 
-    def __call__(self, seq):
+    def __call__(self, seq, penalty_region=None):
         folding, mfe = self._fold(seq)
         stems = self.find_stems(folding)
         folding, stems = self.unfold_unstable_structure(folding, stems)
         loops = dict(Counter(map(len, self.pat_find_loops.findall(folding))))
 
+        penalty_score = 0
+        if penalty_region:
+            penalty_score = self.calculate_penalty(stems, penalty_region)
         return {
             'folding': folding,
             'mfe': mfe,
