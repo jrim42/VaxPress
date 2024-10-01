@@ -245,7 +245,8 @@ class CDSEvolutionChamber:
                 # Only the initial sequence is evaluated
                 self.flatten_seqs = [''.join(self.population[0])]
                 total_scores, scores, metrics, foldings = self.seqeval.evaluate(
-                                                    self.flatten_seqs, executor)
+                                                    self.flatten_seqs, executor,
+                                                    self.execopts.lineardesign_penalty)
                 if total_scores is None:
                     error_code = 1
                 else:
@@ -263,7 +264,8 @@ class CDSEvolutionChamber:
                     break
 
                 total_scores, scores, metrics, foldings = self.seqeval.evaluate(
-                                                    self.flatten_seqs, executor)
+                                                    self.flatten_seqs, executor,
+                                                    self.execopts.lineardesign_penalty)
                 if total_scores is None:
                     # Termination due to errors from one or more scoring functions
                     error_code = 1
