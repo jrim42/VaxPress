@@ -274,6 +274,9 @@ def parse_options(scoring_funcs, preset, default_off):
     grp.add_argument('--lineardesign-penalty', type=str, default='', metavar='N~M',
                      help='Apply penalty when bases in the region N~M fold with '
                           'bases outside the region. N and M must be integers with N <= M.')
+    grp.add_argument('--lineardesign-penalty-weight', type=float, default=1.0, metavar='WEIGHT',
+                     help='Weight on lineardesign penalty')
+
 
     argmaps = []
     for func in sorted(scoring_funcs.values(), key=lambda f: f.priority):
@@ -348,6 +351,7 @@ def run_vaxpress():
         lineardesign_lambda=args.lineardesign,
         lineardesign_omit_start=args.lineardesign_omit_start,
         lineardesign_penalty=args.lineardesign_penalty,
+        lineardesign_penalty_weight=args.lineardesign_penalty_weight,
         folding_engine=args.folding_engine,
     )
 

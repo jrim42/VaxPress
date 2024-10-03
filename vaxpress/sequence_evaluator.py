@@ -57,7 +57,7 @@ class FoldEvaluator:
         else:
             raise ValueError(f'Unsupported RNA folding engine: {self.engine}')
 
-    def __call__(self, seq, lineardesign_penalty=None):
+    def __call__(self, seq, lineardesign_penalty=None, lineardesign_penalty_weight=1.0):
         folding, mfe = self._fold(seq)
         stems = self.find_stems(folding)
         folding, stems = self.unfold_unstable_structure(folding, stems)
@@ -65,7 +65,7 @@ class FoldEvaluator:
 
         penalty_score = 0
         if lineardesign_penalty:
-            penalty_score = self.calculate_penalty(stems, lineardesign_penalty)
+            penalty_score = self.calculate_penalty(stems, lineardesign_penalty, lineardesign_penalty_weight)
 
         return {
             'folding': folding,
@@ -111,7 +111,7 @@ class FoldEvaluator:
 
         return ''.join(folding), newstems
 
-    def calculate_penalty(self, stems, lineardesign_penalty):
+    def calculate_penalty(self, stems, lineardesign_penalty, lineardesign_penalty_weight=1.0):
         start = int(lineardesign_penalty.split('~')[0])
         end = int(lineardesign_penalty.split('~')[1])
         penalty = 0
@@ -123,7 +123,7 @@ class FoldEvaluator:
                     penalty += 1
                 elif (start <= p5 <= end and start <= p3 <= end):
                     penalty -= 1
-        return penalty
+        return penalty * lineardesign_penalty_weight
 
 class SequenceEvaluator:
 
@@ -185,9 +185,9 @@ class SequenceEvaluator:
 
             self.penalty_metric_flags.update(cls.penalty_metric_flags)
 
-    def evaluate(self, seqs, executor, lineardesign_penalty):
+    def evaluate(self, seqs, executor, lineardesign_penalty, lineardesign_penalty_weight):
         with SequenceEvaluationSession(self, seqs, executor) as sess:
-            sess.evaluate(lineardesign_penalty)
+            sess.evaluate(lineardesign_penalty, lineardesign_penalty_weight)
 
             if not sess.errors:
                 total_scores = []
@@ -202,7 +202,9 @@ class SequenceEvaluator:
 
     def get_folding(self, seq):
         if seq not in self.folding_cache:
-            self.folding_cache[seq] = self.foldeval(seq, self.execopts.lineardesign_penalty)
+            self.folding_cache[seq] = self.foldeval(seq, 
+                                                    self.execopts.lineardesign_penalty, 
+                                                    self.execopts.lineardesign_penalty_weight)
         return self.folding_cache[seq]
 
     def prepare_evaluation_data(self, seq):
@@ -265,7 +267,7 @@ class SequenceEvaluationSession:
             self.pbar.close()
         log.info('')
 
-    def evaluate(self, lineardesign_penalty) -> None:
+    def evaluate(self, lineardesign_penalty, lineardesign_penalty_weight) -> None:
         jobs = set()
 
         # Secondary structure prediction is the first set of tasks.
@@ -280,7 +282,7 @@ class SequenceEvaluationSession:
                     self.pbar.update()
                 continue
 
-            future = self.executor.submit(self.foldeval, seq, lineardesign_penalty)
+            future = self.executor.submit(self.foldeval, seq, lineardesign_penalty, lineardesign_penalty_weight)
             future._seqidx = i
             future._type = 'folding'
             jobs.add(future)
